@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Radio Kezan - 24/7 Profit</title>
+    <style>
+        body { background: #0a0a0a; color: #ffd100; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { width: 500px; background: #1a1a1a; border: 4px solid #3d3420; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 50px #ffd10022; }
+        .on-air { color: #ff0000; font-weight: bold; font-size: 1.4em; animation: blink 1s infinite; margin-bottom: 20px; text-shadow: 0 0 10px red; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .goblin-area { display: flex; justify-content: space-around; margin: 25px 0; }
+        .avatar { width: 100px; height: 100px; background: #222; border: 3px solid #3d3420; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; transition: 0.1s; position: relative; }
+        .avatar.talking { border-color: #ffd100; transform: scale(1.1); box-shadow: 0 0 20px #ffd10044; }
+        button { background: #ffd100; color: #000; border: none; padding: 20px; font-weight: bold; cursor: pointer; border-radius: 10px; width: 100%; font-size: 1.3em; box-shadow: 0 4px 0 #b39300; }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #b39300; }
+        #text-box { margin-top: 30px; font-style: italic; color: #eee; min-height: 120px; border-top: 1px solid #333; padding-top: 15px; font-size: 1.1em; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="on-air">● RADIO KEZAN - LIVE</div>
+    <div class="goblin-area">
+        <div id="brazz-img" class="avatar">💰</div>
+        <div id="frizzo-img" class="avatar">⚙️</div>
+    </div>
+    <div id="text-box">Klicke für den unendlichen Stream!</div>
+    <button id="startBtn" onclick="toggleRadio()">SENDER STARTEN</button>
+</div>
+
+<script>
+    const synth = window.speechSynthesis;
+    let isRunning = false;
+    let voices = [];
+    let currentConversation = [];
+    let lineIndex = 0;
+    let lastChatIndex = -1;
+
+    const dialoguePool = [
+        ["Brazz: Frizzo, die Verkaufszahlen für 'Echte Nachtelfen-Tränen' stagnieren. Was ist da los?", "Frizzo: Die Kunden merken langsam, dass es nur Salzwasser mit Glitzer ist, Boss.", "Brazz: Dann nenn es 'Destilliertes Mana-Extrakt' und verdopple den Preis! Zeit ist Gold!"],
+        ["Frizzo: Chef, ich habe die Rakete zum Südmeer fertiggestellt. Sie ist zu 80 Prozent sicher!", "Brazz: 80 Prozent? Das sind 20 Prozent zu viel Sicherheit, die wir uns sparen können! Bau die Bremsen aus!", "Frizzo: Gute Idee! Wer bremst, verliert sowieso nur wertvolle Sendezeit."],
+        ["Brazz: Warum hat der Taure unser Casino verlassen? Er sah aus, als hätte er noch Gold in den Taschen.", "Frizzo: Er sagte, der Spielautomat hätte ihn 'moralisch enttäuscht'.", "Brazz: Moralisch? Wir sind Goblins! Sag ihm, für fünf Gold extra kriegt er eine Absolution!"],
+        ["Frizzo: Boss, die Allianz hat eine neue Steuer auf mechanische Haustiere eingeführt.", "Brazz: Diese Amateure! Wir deklarieren unsere mechanischen Eichhörnchen einfach als 'selbstfahrende Küchengeräte'.", "Frizzo: Genial. Gegen Toaster können sie nichts sagen!"],
+        ["Brazz: Frizzo, was macht die Kaja'Cola-Produktion? Schmeckt sie immer noch nach Batterien?", "Frizzo: Ja, aber das ist jetzt das neue 'Elektro-Prickeln'-Gefühl!", "Brazz: Wunderbar. Verkaufsargument Nummer eins: Es lädt die Zähne beim Trinken auf!"],
+        ["Frizzo: Ein Gnom wollte unsere neueste Erfindung kaufen, aber er wollte einen Kaufbeleg.", "Brazz: Ein Beleg? Hat er den Verstand verloren? Wir geben keine Beweise für unsere Geschäfte!", "Frizzo: Ich hab ihm stattdessen eine brennende Zündschnur in die Hand gedrückt und bin weggerannt."],
+        ["Brazz: He Frizzo, wusstest du, dass die Blutelfen ihre Haarpflegeprodukte jetzt aus Unterstadt beziehen?", "Frizzo: Ernsthaft? Die benutzen Knochenmark-Shampoo?", "Brazz: Ja, und es riecht schrecklich. Wir sollten ihnen unser 'Goblin-Glatz-Mittel' verkaufen!"],
+        ["Frizzo: Die Horde hat sich über die Zeppelin-Tickets beschwert. Die Leute fallen durch den Boden.", "Brazz: Das ist kein Mangel, das ist 'Extrem-Fallschirmspringen' ohne Aufpreis!", "Frizzo: Ah, Abenteuer-Tourismus. Ich schreibe es direkt auf die Plakate."],
+        ["Brazz: Frizzo, hast du die Beutebucht-Zölle schon hinterzogen?", "Frizzo: Schon heute Morgen, Chef. Direkt nach dem Frühstück.", "Brazz: Sehr gut. Ein ehrlicher Goblin ist ein armer Goblin."]
+    ];
+
+    function loadVoices() {
+        voices = synth.getVoices().filter(v => v.lang.startsWith('de'));
+    }
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function toggleRadio() {
+        if (!isRunning) {
+            isRunning = true;
+            document.getElementById('startBtn').innerText = "SENDER STOPPEN";
+            document.getElementById('startBtn').style.background = "#ff4444";
+            nextConversation();
+        } else {
+            isRunning = false;
+            synth.cancel();
+            document.getElementById('startBtn').innerText = "SENDER STARTEN";
+            document.getElementById('startBtn').style.background = "#ffd100";
+            document.getElementById('text-box').innerText = "Funkstille.";
+        }
+    }
+
+    function nextConversation() {
+        if (!isRunning) return;
+        let nextIndex;
+        do { nextIndex = Math.floor(Math.random() * dialoguePool.length); } while (nextIndex === lastChatIndex);
+        lastChatIndex = nextIndex;
+        currentConversation = dialoguePool[nextIndex];
+        lineIndex = 0;
+        speakLine();
+    }
+
+    function speakLine() {
+        if (!isRunning) return;
+        const fullLine = currentConversation[lineIndex];
+        const parts = fullLine.split(": ");
+        const speaker = parts[0];
+        const text = parts[1];
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+
+        if (speaker === "Brazz") {
+            if (voices.length > 0) utterance.voice = voices[0];
+            utterance.pitch = 1.3;
+            utterance.rate = 1.05;
+            document.getElementById('brazz-img').classList.add('talking');
+            document.getElementById('frizzo-img').classList.remove('talking');
+        } else {
+            if (voices.length > 1) utterance.voice = voices[1];
+            else if (voices.length > 0) utterance.voice = voices[0];
+            utterance.pitch = 1.8;
+            utterance.rate = 1.15;
+            document.getElementById('frizzo-img').classList.add('talking');
+            document.getElementById('brazz-img').classList.remove('talking');
+        }
+
+        document.getElementById('text-box').innerText = speaker + ": " + text;
+        utterance.onend = () => {
+            document.getElementById('brazz-img').classList.remove('talking');
+            document.getElementById('frizzo-img').classList.remove('talking');
+            lineIndex++;
+            if (lineIndex < currentConversation.length) {
+                setTimeout(speakLine, 700);
+            } else {
+                setTimeout(nextConversation, 2500);
+            }
+        };
+        synth.speak(utterance);
+    }
+</script>
+</body>
+</html>

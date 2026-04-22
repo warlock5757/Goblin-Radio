@@ -2,17 +2,17 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Radio Kezan - 24/7 Profit</title>
+    <title>Radio Kezan - Voice Mod</title>
     <style>
-        body { background: #0a0a0a; color: #ffd100; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        .box { width: 500px; background: #1a1a1a; border: 4px solid #3d3420; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 50px #ffd10022; position: relative; }
-        .on-air { color: #ff0000; font-weight: bold; font-size: 1.4em; animation: blink 1s infinite; margin-bottom: 20px; text-shadow: 0 0 10px red; }
+        body { background: #0a0a0a; color: #ffd100; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { width: 500px; background: #1a1a1a; border: 4px solid #3d3420; border-radius: 20px; padding: 30px; text-align: center; box-shadow: 0 0 50px #ffd10022; }
+        .on-air { color: #ff0000; font-weight: bold; font-size: 1.4em; animation: blink 1s infinite; margin-bottom: 20px; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .goblin-area { display: flex; justify-content: space-around; margin: 25px 0; }
-        .avatar { width: 100px; height: 100px; background: #222; border: 3px solid #3d3420; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; transition: 0.1s; }
+        .avatar { width: 100px; height: 100px; background: #222; border: 3px solid #3d3420; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 50px; }
         .avatar.talking { border-color: #ffd100; transform: scale(1.1); box-shadow: 0 0 20px #ffd10044; }
-        button { background: #ffd100; color: #000; border: none; padding: 20px; font-weight: bold; cursor: pointer; border-radius: 10px; width: 100%; font-size: 1.3em; box-shadow: 0 4px 0 #b39300; }
-        #text-box { margin-top: 30px; font-style: italic; color: #eee; min-height: 120px; border-top: 1px solid #333; padding-top: 15px; font-size: 1.1em; line-height: 1.4; }
+        button { background: #ffd100; color: #000; border: none; padding: 20px; font-weight: bold; cursor: pointer; border-radius: 10px; width: 100%; font-size: 1.3em; }
+        #text-box { margin-top: 30px; font-style: italic; color: #eee; min-height: 120px; border-top: 1px solid #333; padding-top: 15px; font-size: 1.1em; }
     </style>
 </head>
 <body>
@@ -23,39 +23,30 @@
         <div id="brazz-img" class="avatar">💰</div>
         <div id="frizzo-img" class="avatar">⚙️</div>
     </div>
-    <div id="text-box">Klicke für den unendlichen Profit!</div>
+    <div id="text-box">Warte auf Profit...</div>
     <button id="startBtn" onclick="toggleRadio()">SENDER STARTEN</button>
 </div>
 
 <script>
+    const synth = window.speechSynthesis;
     let isRunning = false;
-    let lineIndex = 0;
     let lastChatIndex = -1;
-    let currentConversation = [];
-    
-    // Wir nutzen deine echte WoW-Datei als Hintergrund-Loop
-    const bgAudio = new Audio('g.ogg');
-    bgAudio.loop = true; 
 
     const dialoguePool = [
-        ["Brazz: Frizzo! Warum steht die Produktion?! Zeit ist Gold, Kumpel!", "Frizzo: Die Rakete ist weg, Boss! Ich hab die Trümmer als 'Mondgestein' verkauft!", "Brazz: Genial! Schreib 'Limitierte Edition' drauf und verlang den dreifachen Preis!"],
-        ["Frizzo: Chef, ein Gnom will sein Gold zurück. Er sagt, das Fluggerät hätte keine Flügel!", "Brazz: Keine Flügel?! Das ist ein 'Aerodynamisches Boden-Fahrzeug'! Schmeiß ihn raus!", "Frizzo: Wird gemacht, Boss! Ich hol schon mal die Zündschnur!"],
-        ["Brazz: Frizzo! Was ist das für ein Gestank?!", "Frizzo: Das ist das neue Kaja'Cola-Konzentrat! Ein Schluck und du siehst die Zukunft!", "Brazz: Die Zukunft?! Perfekt! Wir nennen es 'Goblin-Orakel-Saft'!"],
-        ["Brazz: Hast du die Allianz-Wachen bestochen?", "Frizzo: Mit bleigefüllten Goldmünzen, wie besprochen!", "Brazz: Das ist mein Junge. Ehrlich währt am längsten... oder so ähnlich."]
+        ["Brazz: Frizzo! Die Allianz-Wachen haben unsere Kaja'Cola konfisziert!", "Frizzo: Kein Problem, Boss! Ich hab ihnen stattdessen gefärbtes Abwasser als 'Edel-Wein' verkauft!", "Brazz: Hehe! Dreck in Gold verwandeln, das ist mein Junge!"],
+        ["Frizzo: Chef, die Rakete Richtung Sturmwind ist bereit. Aber sie wackelt ein bisschen.", "Brazz: Wackeln bedeutet nur, dass sie lebt! Zünd das Ding an, bevor der TÜV kommt!", "Frizzo: TÜV? Ich hab den Prüfer in die Brennkammer gesperrt!"],
+        ["Brazz: Zeit ist Gold! Warum ist hier noch kein Geld auf dem Tisch?!", "Frizzo: Die Murlocs haben die Goldmine besetzt.", "Brazz: Dann verkauf die Murlocs als 'Sprechende Haustiere'! Los jetzt!"]
     ];
 
     function toggleRadio() {
         if (!isRunning) {
             isRunning = true;
-            bgAudio.play();
-            document.getElementById('startBtn').innerText = "SENDER STOPPEN";
-            document.getElementById('startBtn').style.background = "#ff4444";
+            document.getElementById('startBtn').innerText = "STOPPEN";
             nextConversation();
         } else {
             isRunning = false;
-            bgAudio.pause();
-            document.getElementById('startBtn').innerText = "SENDER STARTEN";
-            document.getElementById('startBtn').style.background = "#ffd100";
+            synth.cancel();
+            document.getElementById('startBtn').innerText = "STARTEN";
         }
     }
 
@@ -66,38 +57,41 @@
         lastChatIndex = nextIndex;
         currentConversation = dialoguePool[nextIndex];
         lineIndex = 0;
-        showLine();
+        speakLine();
     }
 
-    function showLine() {
+    function speakLine() {
         if (!isRunning) return;
-        const fullLine = currentConversation[lineIndex];
-        const parts = fullLine.split(": ");
+        const parts = currentConversation[lineIndex].split(": ");
         const speaker = parts[0];
         const text = parts[1];
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
 
-        // Wir schalten die Avatare passend zum Text um
         if (speaker === "Brazz") {
+            utterance.pitch = 1.7; // Hoch und fies
+            utterance.rate = 1.3;  // Schnell
             document.getElementById('brazz-img').classList.add('talking');
             document.getElementById('frizzo-img').classList.remove('talking');
         } else {
+            utterance.pitch = 2.0; // Noch höher/piepsiger
+            utterance.rate = 1.5;  // Hektisch
             document.getElementById('frizzo-img').classList.add('talking');
             document.getElementById('brazz-img').classList.remove('talking');
         }
 
         document.getElementById('text-box').innerText = speaker + ": " + text;
-
-        // Nach 4 Sekunden zur nächsten Zeile (ohne Roboterstimme!)
-        setTimeout(() => {
+        
+        utterance.onend = () => {
             lineIndex++;
             if (lineIndex < currentConversation.length) {
-                showLine();
+                setTimeout(speakLine, 600);
             } else {
-                document.getElementById('brazz-img').classList.remove('talking');
-                document.getElementById('frizzo-img').classList.remove('talking');
                 setTimeout(nextConversation, 2000);
             }
-        }, 4000);
+        };
+        synth.speak(utterance);
     }
 </script>
 </body>
